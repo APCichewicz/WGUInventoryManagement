@@ -84,6 +84,13 @@ public class ProductController {
         prodMax.setText(Integer.toString(product.getMax()));
         prodMin.setText(Integer.toString(product.getMin()));
         partListTableView.setItems(Inventory.getAllParts());
+
+        // this gave me a lot of issues initially. my first naive approach was to set
+        // this.usedParts to the observable list returned by product.getAllAssociatedParts()
+        // but this doesnt pass a copy of the list, but a reference to the list itself
+        // and because of this when i tried to iterate over this.usedParts to add all of them to the this.product
+        // it caused concurrent modification errors because i was iterating over and modifying the same list
+        // so i instead clone it into this observable list and then do checks to make sure i dont add duplicate parts
         for (Part part : this.product.getAllAssociatedParts()) {
             this.usedParts.add(part);
         }
