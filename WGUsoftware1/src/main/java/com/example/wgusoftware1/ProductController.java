@@ -177,8 +177,9 @@ public class ProductController {
         // replaced if the setup function is called
         this.product = new Product(0, "", 0, 0, 0, 0);
         // set the product id to the next available id
-        //if this is overwritten by calling the setup and an id number is "skipped" its ok as
-        //the requirements state id's do not need to be contiguous.
+        // if this is overwritten by calling the setup and an id number is "skipped" its
+        // ok as
+        // the requirements state id's do not need to be contiguous.
         this.product.setId(InventoryManagementController.getNextProdId());
         // set the product id text field to the product id and disable it
         prodID.setText(Integer.toString(this.product.getId()));
@@ -285,54 +286,62 @@ public class ProductController {
                 InventoryManagementController.ErrorDialogue("Invalid Min", "Min cannot be empty");
                 return;
             }
+            int id;
+            int stock;
+            int max;
+            int min;
+            double price;
+            String name = prodName.getText();
             try {
-                int id = Integer.parseInt(prodID.getText());
+                id = Integer.parseInt(prodID.getText());
             } catch (NumberFormatException e) {
                 InventoryManagementController.ErrorDialogue("Invalid ID", "ID must be a number");
                 return;
             }
             try {
-                int stock = Integer.parseInt(prodStock.getText());
+                stock = Integer.parseInt(prodStock.getText());
             } catch (NumberFormatException e) {
                 InventoryManagementController.ErrorDialogue("Invalid Stock", "Stock must be a number");
                 return;
             }
             try {
-                int max = Integer.parseInt(prodMax.getText());
+                max = Integer.parseInt(prodMax.getText());
             } catch (NumberFormatException e) {
                 InventoryManagementController.ErrorDialogue("Invalid Max", "Max must be a number");
                 return;
             }
             try {
-                int min = Integer.parseInt(prodMin.getText());
+                min = Integer.parseInt(prodMin.getText());
             } catch (NumberFormatException e) {
                 InventoryManagementController.ErrorDialogue("Invalid Min", "Min must be a number");
                 return;
             }
             try {
-                double price = Double.parseDouble(prodPrice.getText());
+                price = Double.parseDouble(prodPrice.getText());
             } catch (NumberFormatException e) {
                 InventoryManagementController.ErrorDialogue("Invalid Price", "Price must be a number");
                 return;
             }
 
-            if (Integer.parseInt(prodMax.getText()) < Integer.parseInt(prodMin.getText())) {
+            if (max < min) {
                 InventoryManagementController.ErrorDialogue("Invalid Min/Max", "Max must be greater than Min");
                 return;
             }
-            if (Integer.parseInt(prodStock.getText()) > Integer.parseInt(prodMax.getText())) {
+            if (stock > max) {
                 InventoryManagementController.ErrorDialogue("Invalid Stock", "Stock must be less than Max");
                 return;
             }
-            if (Integer.parseInt(prodStock.getText()) < Integer.parseInt(prodMin.getText())) {
+            if (stock < min) {
                 InventoryManagementController.ErrorDialogue("Invalid Stock", "Stock must be greater than Min");
                 return;
             }
-            this.product.setName(prodName.getText());
-            this.product.setStock(Integer.parseInt(prodStock.getText()));
-            this.product.setPrice(Double.parseDouble(prodPrice.getText()));
-            this.product.setMax(Integer.parseInt(prodMax.getText()));
-            this.product.setMin(Integer.parseInt(prodMin.getText()));
+            this.product.setId(id);
+            this.product.setName(name);
+            this.product.setStock(stock);
+            this.product.setPrice(price);
+            this.product.setMax(max);
+            this.product.setMin(min);
+
             // for part in usedParts, add part to product
             // this initially threw a concurrentmodificationexcetption, so i changed it to
             // use an iterator
@@ -342,7 +351,7 @@ public class ProductController {
                 // i forgot to check for this initially and it was causing duplicates, couldnt
                 // figure out why
                 Part temp = itr.next();
-                if (!this.product.getAllAssociatedParts().contains(temp)){
+                if (!this.product.getAllAssociatedParts().contains(temp)) {
                     this.product.addAssociatedPart(temp);
                 }
             }

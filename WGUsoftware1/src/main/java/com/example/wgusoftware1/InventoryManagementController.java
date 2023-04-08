@@ -84,7 +84,63 @@ public class InventoryManagementController {
 
     private static int nextPartId = 0;
 
-    private static int nextProdid = 0;
+    private static int nextProdId = 0;
+
+    /**
+
+     Changes the scene to a new FXML file, passing optional data as parameters.
+
+     @param FXMLdoc The FXML file to load.
+
+     @param event The event that triggered the scene change.
+
+     @param prod Optional data to pass to the new scene.
+
+     @param part Optional data to pass to the new scene.
+
+     @throws IOException If an error occurs while loading the new FXML file.
+     */
+    private void changeScene(String FXMLdoc, ActionEvent event, Product prod, Part part) throws IOException {
+        // get a reference to the stage
+        // do this by getting the source of the event and casting it to a node
+        // then get the scene from the node and get the window from the scene
+        // then cast the window to a stage
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        // load up OTHER FXML document
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(FXMLdoc));
+        Parent root = loader.load();
+        // if the part parameter is not null, do setup for the modpart controller
+        if(part != null){
+            ModPartController mpc = loader.getController();
+            mpc.setPart(part, Inventory.getAllParts().indexOf(part));
+        }
+        if(prod != null){
+            ProductController pc = loader.getController();
+            pc.setup(prod);
+        }
+        // create a new scene with root and set the stage
+        Scene scene = new Scene(root);
+        //set it so that if the stage is closed from the secondary scene it loads back into the main scene
+        stage.setOnCloseRequest(e -> {
+            try {
+                Parent par = FXMLLoader.load(getClass().getResource("InventoryManagementSystem.fxml"));
+                Scene sc = new Scene(par);
+                Stage window = (Stage) e.getSource();
+                window.setScene(sc);
+                window.show();
+                e.consume();
+                stage.setOnCloseRequest(ev ->{
+                    window.close();
+                });
+            }
+            catch (IOException exception){
+                InventoryManagementController.ErrorDialogue("Error", exception.getMessage());
+            }
+
+        });
+        stage.setScene(scene);
+        stage.show();
+    }
     /**
 
      Finds a part in the Inventory by its ID and updates the table view to only display that part.
@@ -174,58 +230,32 @@ public class InventoryManagementController {
     }
 
     /**
-     This method is an event handler for the "Add" button for parts. It loads the AddPart.fxml scene when the button is clicked,
-     and sets the selected part to be modified in the new scene.
-     @param event The event triggered by the "Add" button click.
-     @throws IOException When the FXML file for the Modify Part scene cannot be loaded.
+
+     This method handles the event triggered when the "Add Part" button is clicked. It calls the changeScene method
+     to change the current scene to the Add Part screen.
+     @param event The ActionEvent triggered by the "Add Part" button click
      */
     @FXML
-    void addPart(ActionEvent event) throws IOException {
-        // get a reference to the stage
-        // do this by getting the source of the event and casting it to a node
-        // then get the scene from the node and get the window from the scene
-        // then cast the window to a stage
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        // load up OTHER FXML document
-        Parent root = FXMLLoader.load(getClass().getResource("AddPart.fxml"));
-        // create a new scene with root and set the stage
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+    void addPart(ActionEvent event) {
+        try {
+            changeScene("AddPart.fxml", event, null, null);
+        } catch (IOException e){
+            InventoryManagementController.ErrorDialogue("Error", e.getMessage());
+         }
     }
     /**
-     This method is an event handler for the "Modify" button for parts. It loads the ModPart.fxml scene when the button is clicked,
-     and sets the selected part to be modified in the new scene.
-     @param event The event triggered by the "Modify" button click.
-     @throws IOException When the FXML file for the Modify Part scene cannot be loaded.
+
+     This method handles the event triggered when the "Modify Part" button is clicked. It calls the changeScene method
+     to change the current scene to the Modify Part screen.
+     @param event The ActionEvent triggered by the "Modify Part" button click
+     @throws IOException If there is an error changing to the Modify Part screen
      */
     @FXML
     void modPart(ActionEvent event) throws IOException {
         try {
-            Part selected = partTableView.getSelectionModel().getSelectedItem();
-            if (selected == null) {
-                return;
-            }
-            // get a reference to the stage
-            // do this by getting the source of the event and casting it to a node
-            // then get the scene from the node and get the window from the scene
-            // then cast the window to a stage
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            // load up OTHER FXML document
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("ModPart.fxml"));
-            // get parent
-            Parent root = loader.load();
-            // get scene
-            Scene scene = new Scene(root);
-            // get the controller
-            ModPartController mpc = loader.getController();
-            // send the selected item to the controller
-            mpc.setPart(selected, Inventory.getAllParts().indexOf(selected));
-            // create a new scene with root and set the stage
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            return;
+            changeScene("ModPart.fxml", event, null, this.partTableView.getSelectionModel().getSelectedItem());
+        } catch (IOException e){
+            InventoryManagementController.ErrorDialogue("Error", e.getMessage());
         }
     }
     /**
@@ -277,60 +307,29 @@ public class InventoryManagementController {
     }
 
     /**
-     This method is an event handler for the "Add" button for products. It loads the Product.fxml scene when the button is clicked,
-     without calling the setup method which would pass it a selected product. thus creating and using a fresh product which could be
-     saved to the inventory
-     @param event The event triggered by the "Add" button click.
-     @throws IOException When the FXML file for the Modify Part scene cannot be loaded.
+     Event handler for the "Add Product" button.
+     @param event The event that triggered this method call.
+     @throws IOException If an error occurs while loading the "Product" FXML file.
      */
     @FXML
     void addProd(ActionEvent event) throws IOException {
-        // get a reference to the stage
-        // do this by getting the source of the event and casting it to a node
-        // then get the scene from the node and get the window from the scene
-        // then cast the window to a stage
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        // load up OTHER FXML document
-        Parent root = FXMLLoader.load(getClass().getResource("Product.fxml"));
-        // create a new scene with root and set the stage
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+        try {
+            changeScene("Product.fxml", event, null, null);
+        } catch (IOException e){
+            InventoryManagementController.ErrorDialogue("Error", e.getMessage());
+        }
     }
     /**
-     * An event handler method for the "Modify Product" button. Loads the "Product.fxml" file to switch
-     * it will then get the selected product and pass it to the new scene controller's setup function.
-     * this will allow the product details to be populated.
-     * @param event The ActionEvent object that triggered the method.
-     * @throws IOException If the FXMLLoader is unable to load the "Product.fxml" file.
+     Event handler for the "Modify Product" button.
+     @param event The event that triggered this method call.
+     @throws IOException If an error occurs while loading the "Product" FXML file.
      */
     @FXML
     void modProd(ActionEvent event) throws IOException {
         try {
-            Product selected = productsTableView.getSelectionModel().getSelectedItem();
-            if (selected == null) {
-                return;
-            }
-            // get a reference to the stage
-            // do this by getting the source of the event and casting it to a node
-            // then get the scene from the node and get the window from the scene
-            // then cast the window to a stage
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            // load up OTHER FXML document
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("Product.fxml"));
-            // get parent
-            Parent root = loader.load();
-            // get scene
-            Scene scene = new Scene(root);
-            // get the controller
-            ProductController pc = loader.getController();
-            // send the selected item to the controller
-            pc.setup(selected);
-            // create a new scene with root and set the stage
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            return;
+            changeScene("Product.fxml", event, this.productsTableView.getSelectionModel().getSelectedItem(), null);
+        } catch (IOException e){
+            InventoryManagementController.ErrorDialogue("Error", e.getMessage());
         }
     }
 
@@ -393,9 +392,14 @@ public class InventoryManagementController {
      * @return returns the current value of nextProdId
      */
     public static int getNextProdId(){
-        InventoryManagementController.nextProdid +=1;
-        int temp = InventoryManagementController.nextProdid;
+        InventoryManagementController.nextProdId +=1;
+        int temp = InventoryManagementController.nextProdId;
         return temp;
+    }
+    @FXML
+    void exit(ActionEvent event){
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 
     /**
